@@ -1,0 +1,10 @@
+{
+  "_scenario": "Normalize error should set error.errorType from response code",
+  "path": "JS-NormalizeError.xml",
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Invalid request",
+    "details": 400
+  },
+  "output_variable": "context.getVariable:error.errorType"
+}

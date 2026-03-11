@@ -1,0 +1,9 @@
+{
+  "_scenario": "Normalize error should fallback to default message",
+  "path": "JS-NormalizeError.xml",
+  "error": {
+    "code": "UPSTREAM_FAILURE",
+    "details": 502
+  },
+  "output_variable": "context.getVariable:error.errorMessage"
+}

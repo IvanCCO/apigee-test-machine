@@ -1,0 +1,20 @@
+{
+    "account_id": "1234567890",
+    "safe_place": {
+        "product": "ACCOUNT_LIMITS",
+        "toggle_status": false,
+        "in_safe_place": false,
+        "description": "The account limits are not in the safe place",
+        "has_safe_place": false
+    },
+    "params": {
+        "value": {
+            "amount": "1000",
+            "currency": "USD"
+        }
+    },
+    "content": {
+        "content": "Hello, world!"
+    },
+    "payload": {}
+}

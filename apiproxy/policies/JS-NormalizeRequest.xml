@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Javascript continueOnError="false" enabled="true" timeLimit="200" name="JS-NormalizeRequest">
+  <DisplayName>JS-NormalizeRequest</DisplayName>
+  <Properties/>
+  <IncludeURL>jsc://common/base64.js</IncludeURL>
+  <IncludeURL>jsc://common/utils.js</IncludeURL>
+  <ResourceURL>jsc://request/normalize-request.js</ResourceURL>
+</Javascript>

@@ -1,0 +1,31 @@
+{
+    "_scenario": "When accountId is on the query param, it should be used to get the context",
+    "_config": {
+        "varialbles": {
+            "safe_place": {
+                "product": "ACCOUNT_LIMITS",
+                "toggle_status": false,
+                "in_safe_place": false,
+                "description": "The account limits are not in the safe place",
+                "has_safe_place": false
+            }
+        }
+    },
+    "path": "JS-NormalizeRequest.xml",
+    "request": {
+        "queryParams": {
+            "accountId": "1234567890"
+        },
+        "params": {
+            "value": {
+                "amount": "1000",
+                "currency": "USD"
+            }
+        },
+        "content": {
+            "content": "Hello, world!"
+        },
+        "payload": {}
+    },
+    "output_variable": "request.content"
+}
