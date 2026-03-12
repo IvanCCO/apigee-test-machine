@@ -6,9 +6,14 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 const TESTS_ROOT = __dirname;
 const POLICIES_DIR = path.join(REPO_ROOT, 'apiproxy', 'policies');
 const JSC_DIR = path.join(REPO_ROOT, 'apiproxy', 'resources', 'jsc');
+const RESERVED_ENV_KEYS = new Set(['request', 'error', 'response', 'variables']);
 
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim() !== '';
+}
+
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function listScenarioDirectories(rootDir) {
@@ -19,7 +24,7 @@ function listScenarioDirectories(rootDir) {
     const hasInput = entries.some((entry) => entry.isFile() && entry.name === 'input.json');
     const hasOutput = entries.some((entry) => entry.isFile() && entry.name === 'output.json');
 
-    if (hasInput || hasOutput) {
+    if (hasInput && hasOutput) {
       directories.push(currentDir);
     }
 
@@ -62,7 +67,7 @@ function ensurePathInsideBase(basePath, targetPath, description) {
 
 function resolvePolicyPath(policyFileName) {
   if (!isNonEmptyString(policyFileName)) {
-    throw new Error('input.path must be a non-empty string with the policy XML filename');
+    throw new Error('input.policy must be a non-empty string with the policy XML filename');
   }
 
   const resolved = ensurePathInsideBase(POLICIES_DIR, path.join(POLICIES_DIR, policyFileName), 'Policy path');
@@ -134,11 +139,79 @@ function normalizeContextValue(value) {
   return String(value);
 }
 
+function getInputPayload(inputFixture, key) {
+  const directPayload = inputFixture[key];
+  if (directPayload !== undefined) {
+    return directPayload;
+  }
+
+  const environmentPayload = isPlainObject(inputFixture.environment)
+    ? inputFixture.environment[key]
+    : undefined;
+
+  if (environmentPayload !== undefined) {
+    return environmentPayload;
+  }
+
+  return {};
+}
+
+function getContextVariablesFromFixture(inputFixture) {
+  const environment = isPlainObject(inputFixture.environment) ? inputFixture.environment : {};
+
+  const environmentVariables = Object.fromEntries(
+    Object.entries(environment).filter(([key]) => !RESERVED_ENV_KEYS.has(key)),
+  );
+
+  const nestedEnvironmentVariables = isPlainObject(environment.variables) ? environment.variables : {};
+  const directVariables = isPlainObject(inputFixture.variables) ? inputFixture.variables : {};
+  const legacyVariables = isPlainObject(inputFixture?._config?.varialbles)
+    ? inputFixture._config.varialbles
+    : isPlainObject(inputFixture?._config?.variables)
+      ? inputFixture._config.variables
+      : {};
+
+  return {
+    ...environmentVariables,
+    ...nestedEnvironmentVariables,
+    ...directVariables,
+    ...legacyVariables,
+  };
+}
+
+function toMessageLikeObject(payload, name) {
+  if (!isPlainObject(payload)) {
+    throw new Error(`input.${name} must be an object when provided`);
+  }
+
+  const messageLikeObject = { ...payload };
+  if (typeof messageLikeObject.content === 'undefined') {
+    messageLikeObject.content = JSON.stringify(payload);
+    return messageLikeObject;
+  }
+
+  if (typeof messageLikeObject.content !== 'string') {
+    messageLikeObject.content = JSON.stringify(messageLikeObject.content);
+  }
+
+  return messageLikeObject;
+}
+
+function toRequestLikeObject(payload) {
+  if (!isPlainObject(payload)) {
+    throw new Error('input.request must be an object when provided');
+  }
+
+  return {
+    ...payload,
+    content: JSON.stringify(payload),
+  };
+}
+
 function createSandbox(inputFixture) {
-  const requestPayload = inputFixture.request || {};
-  const errorPayload = inputFixture.error || {};
-  const contextVariables =
-    inputFixture?._config?.varialbles || inputFixture?._config?.variables || {};
+  const requestPayload = getInputPayload(inputFixture, 'request');
+  const errorPayload = getInputPayload(inputFixture, 'error');
+  const contextVariables = getContextVariablesFromFixture(inputFixture);
 
   const variableStore = new Map(
     Object.entries(contextVariables).map(([key, value]) => [key, normalizeContextValue(value)]),
@@ -158,19 +231,10 @@ function createSandbox(inputFixture) {
     },
   };
 
-  const request = {
-    ...requestPayload,
-    content: JSON.stringify(requestPayload),
-  };
+  const request = toRequestLikeObject(requestPayload);
 
   const response = {};
-  const error = {
-    ...errorPayload,
-    content:
-      typeof errorPayload.content === 'string'
-        ? errorPayload.content
-        : JSON.stringify(errorPayload),
-  };
+  const error = toMessageLikeObject(errorPayload, 'error');
 
   const sandbox = {
     context,
@@ -215,7 +279,7 @@ function executeScriptsInSandbox(scriptPaths, sandbox) {
 
 function resolvePathValue(target, dotPath) {
   if (!isNonEmptyString(dotPath)) {
-    throw new Error('input.output_variable must be a non-empty dot path, e.g. request.content');
+    throw new Error('Output expression must be a non-empty dot path, e.g. request.content');
   }
 
   const segments = dotPath.split('.');
@@ -277,14 +341,55 @@ function getComparableActualValue(actualValue, expectedValue) {
   }
 }
 
+function resolveAssertionExpectedValue(assertionConfig, expression) {
+  if (!isPlainObject(assertionConfig) || !Object.prototype.hasOwnProperty.call(assertionConfig, 'equals')) {
+    return assertionConfig;
+  }
+
+  const keys = Object.keys(assertionConfig);
+  if (keys.length > 1) {
+    throw new Error(
+      `Variable assertion "${expression}" only supports the "equals" operator. Found keys: ${keys.join(', ')}`,
+    );
+  }
+
+  return assertionConfig.equals;
+}
+
+function resolveVariablesAssertions(outputFixture) {
+  if (!isPlainObject(outputFixture) || !isPlainObject(outputFixture.variables)) {
+    return null;
+  }
+
+  return outputFixture.variables;
+}
+
+function buildComparableOutputsForVariables(variablesAssertions, vmContext) {
+  const comparableActual = { variables: {} };
+  const comparableExpected = { variables: {} };
+
+  Object.entries(variablesAssertions).forEach(([expression, assertionConfig]) => {
+    const expectedValue = resolveAssertionExpectedValue(assertionConfig, expression);
+    const actualValue = resolveOutputValue(expression, vmContext);
+
+    comparableExpected.variables[expression] = expectedValue;
+    comparableActual.variables[expression] = getComparableActualValue(actualValue, expectedValue);
+  });
+
+  return {
+    comparableActual,
+    comparableExpected,
+  };
+}
+
 function runScenario(scenarioDir) {
   const inputPath = path.join(scenarioDir, 'input.json');
   const outputPath = path.join(scenarioDir, 'output.json');
 
   const inputFixture = readJsonFixture(inputPath);
-  const expectedOutput = readJsonFixture(outputPath);
+  const outputFixture = readJsonFixture(outputPath);
 
-  const policyPath = resolvePolicyPath(inputFixture.path);
+  const policyPath = resolvePolicyPath(inputFixture.policy || inputFixture.path);
   const policyXmlContent = fs.readFileSync(policyPath, 'utf8');
   const scriptUrls = parseScriptUrls(policyXmlContent, policyPath);
   const scriptPaths = scriptUrls.map(resolveScriptPath);
@@ -292,13 +397,30 @@ function runScenario(scenarioDir) {
   const sandbox = createSandbox(inputFixture);
   const vmContext = executeScriptsInSandbox(scriptPaths, sandbox);
 
+  const variablesAssertions = resolveVariablesAssertions(outputFixture);
+  if (variablesAssertions) {
+    const { comparableActual, comparableExpected } = buildComparableOutputsForVariables(
+      variablesAssertions,
+      vmContext,
+    );
+
+    return {
+      actualOutput: comparableActual,
+      comparableActual,
+      comparableExpected,
+      expectedOutput: outputFixture,
+      inputFixture,
+    };
+  }
+
   const actualOutput = resolveOutputValue(inputFixture.output_variable, vmContext);
-  const comparableActual = getComparableActualValue(actualOutput, expectedOutput);
+  const comparableActual = getComparableActualValue(actualOutput, outputFixture);
 
   return {
     actualOutput,
     comparableActual,
-    expectedOutput,
+    comparableExpected: outputFixture,
+    expectedOutput: outputFixture,
     inputFixture,
   };
 }

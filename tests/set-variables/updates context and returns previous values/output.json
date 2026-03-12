@@ -1,0 +1,20 @@
+{
+  "variables": {
+    "response.content": {
+      "equals": {
+        "variable1": "1",
+        "variable2": "2",
+        "variable3": "3"
+      }
+    },
+    "context.getVariable:Context.variable1": {
+      "equals": 2
+    },
+    "context.getVariable:SC.variable2": {
+      "equals": 3
+    },
+    "context.getVariable:SC.Context.variable3": {
+      "equals": 4
+    }
+  }
+}

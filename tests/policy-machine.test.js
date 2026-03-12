@@ -13,8 +13,8 @@ describe('Jest XML-driven policy test machine', () => {
     const scenarioName = path.relative(TESTS_ROOT, scenarioDir);
 
     test(`scenario: ${scenarioName}`, () => {
-      const { comparableActual, expectedOutput } = runScenario(scenarioDir);
-      expect(comparableActual).toEqual(expectedOutput);
+      const { comparableActual, comparableExpected } = runScenario(scenarioDir);
+      expect(comparableActual).toEqual(comparableExpected);
     });
   });
 });

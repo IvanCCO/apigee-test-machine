@@ -1,0 +1,9 @@
+{
+  "_scenario": "JS-SetVariables should return previous values and overwrite context variables",
+  "policy": "JS-SetVariables.xml",
+  "environment": {
+    "Context.variable1": 1,
+    "SC.variable2": 2,
+    "SC.Context.variable3": 3
+  }
+}

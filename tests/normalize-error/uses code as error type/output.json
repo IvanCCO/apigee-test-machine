@@ -1,1 +1,13 @@
-"BAD_REQUEST"
+{
+    "variables": {
+        "context.getVariable:error.errorType": {
+            "equals": "BAD_REQUEST"
+        },
+        "context.getVariable:error.errorMessage": {
+            "equals": "Invalid request"
+        },
+        "context.getVariable:error.errorStatusCode": {
+            "equals": 400
+        }
+    }
+}
