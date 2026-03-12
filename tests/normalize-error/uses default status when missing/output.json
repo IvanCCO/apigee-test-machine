@@ -1,0 +1,13 @@
+{
+  "variables": {
+    "context.getVariable:error.errorType": {
+      "equals": "TIMEOUT"
+    },
+    "context.getVariable:error.errorMessage": {
+      "equals": "Gateway timeout"
+    },
+    "context.getVariable:error.errorStatusCode": {
+      "equals": 500
+    }
+  }
+}

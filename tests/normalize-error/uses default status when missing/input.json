@@ -1,0 +1,10 @@
+{
+  "_scenario": "Normalize error should fallback to status 500",
+  "policy": "JS-NormalizeError.xml",
+  "environment": {
+    "error": {
+      "code": "TIMEOUT",
+      "message": "Gateway timeout"
+    }
+  }
+}

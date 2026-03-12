@@ -1,0 +1,10 @@
+{
+  "_scenario": "Normalize error should fallback to default message",
+  "policy": "JS-NormalizeError.xml",
+  "environment": {
+    "error": {
+      "code": "UPSTREAM_FAILURE",
+      "details": 502
+    }
+  }
+}

@@ -53,3 +53,8 @@ Each scenario is a folder with:
 - Assert multiple variables in the same `output.json` instead of creating one test per variable.
 - Use `environment` to preload all required context variables for each policy.
 - Add one happy-path and one failure-path scenario per policy.
+
+## Helper script
+
+- Run all scenarios: `node tests/run-scenario.js --all`
+- Run one scenario: `node tests/run-scenario.js "normalize-error/uses default status when missing"`

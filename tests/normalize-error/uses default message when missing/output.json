@@ -1,0 +1,13 @@
+{
+  "variables": {
+    "context.getVariable:error.errorType": {
+      "equals": "UPSTREAM_FAILURE"
+    },
+    "context.getVariable:error.errorMessage": {
+      "equals": "An unknown error occurred"
+    },
+    "context.getVariable:error.errorStatusCode": {
+      "equals": 502
+    }
+  }
+}
