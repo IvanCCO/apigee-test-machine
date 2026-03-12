@@ -3,12 +3,13 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: ./test.sh [--all] [--scenario <path>] [--path <path>]
+Usage: ./test.sh [--all] [--scenario <path>] [--path <path>] [--create <policy.xml>]
 
 Examples:
   ./test.sh --all
   ./test.sh --scenario "normalize-request/numero da conta no query param"
   ./test.sh --path "normalize-error/uses code as error type"
+  ./test.sh --create "JS-Something.xml"
 USAGE
 }
 
@@ -29,6 +30,15 @@ case "$1" in
     fi
 
     node tests/run-scenario.js "$1" "$2"
+    ;;
+  --create)
+    if [[ $# -lt 2 ]]; then
+      echo "Error: --create requires a policy XML filename" >&2
+      usage
+      exit 1
+    fi
+
+    node tests/create-scenario.js "$2"
     ;;
   --help|-h)
     usage

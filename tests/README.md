@@ -71,6 +71,8 @@ Each scenario is a folder with:
 - Run all scenarios (shortcut): `./test.sh --all` or `./test --all`
 - Run one scenario (shortcut): `./test.sh --scenario "<path>"` or `./test --scenario "<path>"`
 - Path alias (shortcut): `./test.sh --path "<path>"` or `./test --path "<path>"`
+- Create scaffold (shortcut): `./test.sh --create "JS-Something.xml"` or `./test --create "JS-Something.xml"`
+- New scaffold starts with `"skip": true`; set to `false` when ready.
 
 ## Internal modules (for debugging)
 
