@@ -1,0 +1,14 @@
+{
+  "variables": {
+    "response.content": {
+      "equals": {
+        "main": {
+          "id": "abc-123",
+          "status": "ok",
+          "amount": 99
+        },
+        "another": "second-call-response"
+      }
+    }
+  }
+}

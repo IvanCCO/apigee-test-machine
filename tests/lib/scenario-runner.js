@@ -20,6 +20,7 @@ function runScenario(scenarioDir) {
 
   const sandbox = createSandbox({
     requestPayload: resolveMessagePayload(inputFixture, 'request'),
+    responsePayload: resolveMessagePayload(inputFixture, 'response'),
     errorPayload: resolveMessagePayload(inputFixture, 'error'),
     contextVariables: resolveContextVariables(inputFixture),
   });

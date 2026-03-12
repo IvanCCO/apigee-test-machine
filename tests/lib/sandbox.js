@@ -73,14 +73,20 @@ function createContext(contextVariables) {
   };
 }
 
-function createSandbox({ requestPayload, errorPayload, contextVariables }) {
+function createSandbox({ requestPayload, responsePayload, errorPayload, contextVariables }) {
   const context = createContext(contextVariables);
 
   const sandbox = {
     context,
     request: normalizeRequestObject(requestPayload),
-    response: {},
+    response: normalizeMessageObject(responsePayload, 'response'),
     error: normalizeMessageObject(errorPayload, 'error'),
+    print(...args) {
+      console.log(...args);
+    },
+    Print(...args) {
+      console.log(...args);
+    },
     httpClient: {
       send() {
         return undefined;

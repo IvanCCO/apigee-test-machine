@@ -1,0 +1,12 @@
+{
+  "_scenario": "JS-SampleResponse should read response.content and include sc.response",
+  "policy": "JS-SampleResponse.xml",
+  "response": {
+    "id": "abc-123",
+    "status": "ok",
+    "amount": 99
+  },
+  "environment": {
+    "sc.response": "second-call-response"
+  }
+}

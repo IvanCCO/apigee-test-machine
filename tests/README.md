@@ -13,6 +13,7 @@ Each scenario is a folder with:
   "skip": false,
   "policy": "JS-PolicyName.xml",
   "request": {},
+  "response": {},
   "error": {},
   "environment": {
     "my.context.variable": "value"
@@ -24,9 +25,10 @@ Each scenario is a folder with:
 - `_scenario`: required non-empty scenario name (validated during discovery).
 - `skip`: optional boolean. When `true`, scenario is ignored by discovery/runners.
 - `request`: object injected into the VM as `request` and also serialized into `request.content`.
+- `response`: object injected into the VM as `response` and also serialized into `response.content`.
 - `error`: object injected as `error` (`error.content` is auto-serialized when missing).
 - `environment`: context variables seed (`context.getVariable` reads these values).
-- `environment.error` and `environment.request` are also accepted as aliases.
+- `environment.error`, `environment.request`, and `environment.response` are also accepted as aliases.
 
 ## `output.json`
 
