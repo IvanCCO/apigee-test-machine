@@ -10,6 +10,7 @@ Each scenario is a folder with:
 ```json
 {
   "_scenario": "Human readable scenario name",
+  "skip": false,
   "policy": "JS-PolicyName.xml",
   "request": {},
   "error": {},
@@ -20,6 +21,8 @@ Each scenario is a folder with:
 ```
 
 - `policy`: policy XML file under `apiproxy/policies`.
+- `_scenario`: required non-empty scenario name (validated during discovery).
+- `skip`: optional boolean. When `true`, scenario is ignored by discovery/runners.
 - `request`: object injected into the VM as `request` and also serialized into `request.content`.
 - `error`: object injected as `error` (`error.content` is auto-serialized when missing).
 - `environment`: context variables seed (`context.getVariable` reads these values).
@@ -57,4 +60,16 @@ Each scenario is a folder with:
 ## Helper script
 
 - Run all scenarios: `node tests/run-scenario.js --all`
-- Run one scenario: `node tests/run-scenario.js "normalize-error/uses default status when missing"`
+- Run one scenario: `node tests/run-scenario.js --scenario "normalize-error/uses default status when missing"`
+- Run all scenarios (shortcut): `./test.sh --all` or `./test --all`
+- Run one scenario (shortcut): `./test.sh --scenario "<path>"` or `./test --scenario "<path>"`
+- Path alias (shortcut): `./test.sh --path "<path>"` or `./test --path "<path>"`
+
+## Internal modules (for debugging)
+
+- `tests/lib/scenario-runner.js`: Orchestrates a full scenario execution.
+- `tests/lib/policy-loader.js`: Resolves policy XML and JS resource paths.
+- `tests/lib/sandbox.js`: Builds Apigee-like VM globals and executes JS scripts.
+- `tests/lib/assertions.js`: Resolves expressions and builds comparable assertion payloads.
+- `tests/lib/fixtures.js`: Reads and normalizes fixture inputs.
+- `tests/lib/scenario-cli.js`: CLI parsing, scenario lookup, and console reporting.
