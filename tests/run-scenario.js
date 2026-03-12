@@ -1,6 +1,7 @@
 const { TESTS_ROOT, listScenarioDirectories, runScenario } = require('./run');
 const {
   findScenarioDirectory,
+  colorize,
   parseCliArguments,
   printAvailableScenarios,
   printUsage,
@@ -19,7 +20,7 @@ function runSingleScenario(scenarioArgument, scenarioDirectories) {
   const scenarioDirectory = findScenarioDirectory(scenarioArgument, TESTS_ROOT, scenarioDirectories);
 
   if (!scenarioDirectory) {
-    console.error(`Scenario not found: ${scenarioArgument}`);
+    console.error(colorize(`Scenario not found: ${scenarioArgument}`, 'red'));
     printAvailableScenarios(TESTS_ROOT, scenarioDirectories);
     process.exitCode = 1;
     return;
@@ -41,7 +42,7 @@ function main() {
   }
 
   if (command.mode === 'invalid') {
-    console.error(command.error);
+    console.error(colorize(command.error, 'red'));
     printUsage();
     process.exitCode = 1;
     return;

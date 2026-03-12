@@ -1,6 +1,32 @@
 const assert = require('assert');
 const path = require('path');
 
+const ANSI = {
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+};
+
+function supportsColor() {
+  if (process.env.NO_COLOR) {
+    return false;
+  }
+
+  if (process.env.FORCE_COLOR && process.env.FORCE_COLOR !== '0') {
+    return true;
+  }
+
+  return Boolean(process.stdout.isTTY);
+}
+
+function colorize(text, color) {
+  if (!supportsColor()) {
+    return text;
+  }
+
+  return `${ANSI[color]}${text}${ANSI.reset}`;
+}
+
 function toRelativeScenarioPath(testsRoot, scenarioDir) {
   return path.relative(testsRoot, scenarioDir);
 }
@@ -43,8 +69,8 @@ function printAvailableScenarios(testsRoot, scenarioDirectories) {
 }
 
 function printFailure(relativeScenarioPath, error, actualValue, expectedValue) {
-  console.error(`FAIL ${relativeScenarioPath}`);
-  console.error(error.message);
+  console.error(colorize(`FAIL ${relativeScenarioPath}`, 'red'));
+  console.error(colorize(error.message, 'red'));
 
   if (actualValue === undefined && expectedValue === undefined) {
     return;
@@ -62,7 +88,7 @@ function runAndAssertScenario(testsRoot, scenarioDir, runScenario) {
   try {
     const { comparableActual, comparableExpected } = runScenario(scenarioDir);
     assert.deepStrictEqual(comparableActual, comparableExpected);
-    console.log(`PASS ${relativeScenarioPath}`);
+    console.log(colorize(`PASS ${relativeScenarioPath}`, 'green'));
     return true;
   } catch (error) {
     printFailure(relativeScenarioPath, error, error.actual, error.expected);
@@ -97,6 +123,7 @@ function parseCliArguments(rawArgs) {
 }
 
 module.exports = {
+  colorize,
   findScenarioDirectory,
   parseCliArguments,
   printAvailableScenarios,
