@@ -12,6 +12,9 @@ Each scenario is a folder with:
   "_scenario": "Human readable scenario name",
   "skip": false,
   "policy": "JS-PolicyName.xml",
+  "runtime": {
+    "now": "2024-01-02T03:04:05.000Z"
+  },
   "request": {},
   "response": {},
   "error": {},
@@ -24,6 +27,8 @@ Each scenario is a folder with:
 - `policy`: policy XML file under `apiproxy/policies`.
 - `_scenario`: required non-empty scenario name (validated during discovery).
 - `skip`: optional boolean. When `true`, scenario is ignored by discovery/runners.
+- `runtime`: optional execution config.
+- `runtime.now`: freezes `new Date()` and `Date.now()` for deterministic tests.
 - `request`: object injected into the VM as `request` and also serialized into `request.content`.
 - `response`: object injected into the VM as `response` and also serialized into `response.content`.
 - `error`: object injected as `error` (`error.content` is auto-serialized when missing).

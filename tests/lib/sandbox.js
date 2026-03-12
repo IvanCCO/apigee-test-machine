@@ -1,7 +1,7 @@
 const fs = require('fs');
 const vm = require('vm');
 
-const { isPlainObject } = require('./predicates');
+const { isNonEmptyString, isPlainObject } = require('./predicates');
 
 function normalizeContextValue(value) {
   if (typeof value === 'string') {
@@ -111,10 +111,78 @@ function installVmCompat(vmContext) {
   );
 }
 
-function executeScriptsInSandbox(scriptPaths, sandbox) {
+function resolveFixedNow(runtimeConfig) {
+  if (!isPlainObject(runtimeConfig)) {
+    return null;
+  }
+
+  const fixedNowValue =
+    runtimeConfig.now ?? runtimeConfig.mockDate ?? runtimeConfig.fixedDate ?? undefined;
+
+  if (fixedNowValue === undefined || fixedNowValue === null) {
+    return null;
+  }
+
+  if (typeof fixedNowValue === 'number' && Number.isFinite(fixedNowValue)) {
+    return fixedNowValue;
+  }
+
+  if (isNonEmptyString(fixedNowValue)) {
+    const parsedDate = Date.parse(fixedNowValue);
+    if (!Number.isNaN(parsedDate)) {
+      return parsedDate;
+    }
+  }
+
+  throw new Error(
+    'Invalid runtime date mock. Use runtime.now (or runtime.mockDate / runtime.fixedDate) as epoch ms number or ISO date string.',
+  );
+}
+
+function installMockedDate(vmContext, runtimeConfig) {
+  const fixedNow = resolveFixedNow(runtimeConfig);
+  if (fixedNow === null) {
+    return;
+  }
+
+  vm.runInContext(
+    `
+    (function(__fixedNow) {
+      const __RealDate = Date;
+
+      function MockDate(...args) {
+        if (new.target) {
+          if (args.length === 0) {
+            return new __RealDate(__fixedNow);
+          }
+
+          return new __RealDate(...args);
+        }
+
+        if (args.length === 0) {
+          return __RealDate(__fixedNow);
+        }
+
+        return __RealDate(...args);
+      }
+
+      Object.setPrototypeOf(MockDate, __RealDate);
+      MockDate.prototype = __RealDate.prototype;
+      MockDate.now = function() { return __fixedNow; };
+      MockDate.parse = __RealDate.parse;
+      MockDate.UTC = __RealDate.UTC;
+      globalThis.Date = MockDate;
+    })(${JSON.stringify(fixedNow)});
+    `,
+    vmContext,
+  );
+}
+
+function executeScriptsInSandbox(scriptPaths, sandbox, runtimeConfig = {}) {
   const vmContext = vm.createContext(sandbox);
 
   installVmCompat(vmContext);
+  installMockedDate(vmContext, runtimeConfig);
 
   scriptPaths.forEach((scriptPath) => {
     const sourceCode = fs.readFileSync(scriptPath, 'utf8');

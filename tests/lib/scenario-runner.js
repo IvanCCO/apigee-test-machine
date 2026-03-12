@@ -12,6 +12,18 @@ function resolvePolicyFileName(inputFixture) {
   return inputFixture.policy || inputFixture.path;
 }
 
+function resolveRuntimeConfig(inputFixture) {
+  if (inputFixture.runtime && typeof inputFixture.runtime === 'object') {
+    return inputFixture.runtime;
+  }
+
+  if (inputFixture._runtime && typeof inputFixture._runtime === 'object') {
+    return inputFixture._runtime;
+  }
+
+  return {};
+}
+
 function runScenario(scenarioDir) {
   const { inputFixture, outputFixture } = readScenarioFixtures(scenarioDir);
 
@@ -25,7 +37,11 @@ function runScenario(scenarioDir) {
     contextVariables: resolveContextVariables(inputFixture),
   });
 
-  const vmContext = executeScriptsInSandbox(scriptPaths, sandbox);
+  const vmContext = executeScriptsInSandbox(
+    scriptPaths,
+    sandbox,
+    resolveRuntimeConfig(inputFixture),
+  );
   const variablesAssertions = resolveVariablesAssertions(outputFixture);
 
   if (variablesAssertions) {

@@ -1,0 +1,7 @@
+{
+  "_scenario": "JS-DateNow should use runtime.now as fixed date",
+  "policy": "JS-DateNow.xml",
+  "runtime": {
+    "now": "2024-01-02T03:04:05.000Z"
+  }
+}
